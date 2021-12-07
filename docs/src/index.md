@@ -26,6 +26,9 @@ Documentation has been created using the [mkdocs](https://pypi.org/project/mkdoc
 
 | Directory                      | Short Description                                                                                     |
 |--------------------------------|-------------------------------------------------------------------------------------------------------|
+| ./bge_main.py                    | Main script to run BGE                                               |
+| ./main_random.py                 | Computes BGE for a randomly generated bipartite graph. Useful for scalability testing as well checking that BGE is installed correctly. | 
 | ./docs                           | Contains documentation of all scripts (mkdocs)                                                      |
-| ./lib/bipartite_graph_embeddings | Scripts to train bipartite graph embeddings (BGE).                                                  |
+| ./lib/                           | A collection of scripts necessary to train BGE.                        |
+| ./lib/bipartite_graph_embeddings | Scripts relating to BGE algorithm itself.                                        |
 | ./lib/common                     | Common functions used throughout the codebase.                                                      |
