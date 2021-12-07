@@ -14,9 +14,9 @@ This repo contains all the necessary tools to utilise bipartite graph embeddings
 Documentation has been created using the [mkdocs](https://pypi.org/project/mkdocs/) python package. To view documentation:
 1. Install mkdocs and extras: 
     
-    * ``pip install mkdocs``
+   -  ``pip install mkdocs``
     
-    * ``pip install mkdocs-material-extensions``
+   - ``pip install mkdocs-material-extensions``
     
 2. From "docs" directory: ``python -m mkdocs serve``
 3. Navigate to [localhost:8000](http://localhost:8000) in your preferred browser.

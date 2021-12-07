@@ -1,6 +1,6 @@
 # encoding: utf-8
 # module optimiser.py
-# from affiliation_graphs
+# from bipartite_graph_embeddings
 # author: Kyle Millar (kyle.millar@adelaide.edu.au)
 
 # ---

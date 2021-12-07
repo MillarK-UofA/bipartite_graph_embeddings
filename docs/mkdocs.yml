@@ -1,0 +1,57 @@
+site_name: 'Bipartite Graph Embeddings (BGE) - README'
+docs_dir: src
+theme:
+  features:
+    - tabs
+  name: 'material'
+nav:
+  - Home: index.md
+  - Requirements: tabs/requirements.md
+  - How To: tabs/howto.md
+  - Known Issues: tabs/issues.md
+  - Bipartite Graph Embeddings:
+      - model: bipartite_graph_embeddings/model.md
+      - initialisers:
+          - initialiser: bipartite_graph_embeddings/initialisers/initialiser.md
+      - loss_functions:
+          - loss_function: bipartite_graph_embeddings/loss_functions/loss_function.md
+          - dot: bipartite_graph_embeddings/loss_functions/dot.md
+          - cosine: bipartite_graph_embeddings/loss_functions/cosine.md
+          - angular: bipartite_graph_embeddings/loss_functions/angular.md
+      - optimisers:
+          - optimiser: bipartite_graph_embeddings/optimisers/optimiser.md
+          - sgd: bipartite_graph_embeddings/optimisers/sgd.md
+          - adam: bipartite_graph_embeddings/optimisers/adam.md
+      - stop_conditions:
+          - stop_condition: bipartite_graph_embeddings/stop_conditions/stop_condition.md
+      - sampling_strategies:
+          - sampling_strategy: bipartite_graph_embeddings\sampling_strategy\sampling_strategy.md
+          - transient_edge_sampling: bipartite_graph_embeddings\sampling_strategy\transient_edge_sampling.md
+          - random_walk: bipartite_graph_embeddings\sampling_strategy\random_walk.md
+          - edge_sampling: bipartite_graph_embeddings\sampling_strategy\edge_sampling.md
+  - Common:
+      - summary: tabs/common.md
+      - bipartite_graph: common/bipartite_graph.md
+      - chunker: common/chunker.md
+      - cupy_support: common/cupy_support.md
+      - alias_table: common/alias_table.md
+
+markdown_extensions:
+  - toc:
+      toc_depth: 3
+      permalink: True
+  - extra
+  - smarty
+  - codehilite
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.emoji
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.tabbed
+  - pymdownx.tilde
+  - pymdownx.caret
+
+
+

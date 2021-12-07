@@ -1,5 +1,5 @@
 # encoding: utf-8
-# module model.py
+# module stop_condition.py
 # from bipartite_graph_embeddings
 # author: Kyle Millar (kyle.millar@adelaide.edu.au)
 

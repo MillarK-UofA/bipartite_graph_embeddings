@@ -25,7 +25,6 @@ from lib.common.alias_table import alias_setup, alias_draw
 from lib.common.cupy_support import xp
 import random
 from time import time
-import numpy as np
 import os
 # ---
 

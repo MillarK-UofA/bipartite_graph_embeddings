@@ -1,6 +1,6 @@
 # encoding: utf-8
 # module chunker.py
-# from affiliation_graphs
+# from common
 # author: Kyle Millar (kyle.millar@adelaide.edu.au)
 
 """

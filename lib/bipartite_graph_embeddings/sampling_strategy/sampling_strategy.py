@@ -1,16 +1,12 @@
 # encoding: utf-8
-# module model.py
+# module sampling_strategy.py
 # from bipartite_graph_embeddings
 # author: Kyle Millar (kyle.millar@adelaide.edu.au)
 
 # ---
-import random
-
 from lib.common.cupy_support import xp
-from lib.common.alias_table import alias_draw
 import numpy as np
 import os
-from time import time
 # ---
 
 
