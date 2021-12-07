@@ -4,7 +4,6 @@ This page contains all third-party software packages required to run the scripts
 | Software Support | Validated Version | Short Description |
 | -------- | ----------------- | ----------------- |
 | [Python](https://www.python.org/downloads/release/python-360/) | 3.8.1 | Python is the default programming language used throughout the codebase. |
-| [PostgreSQL](https://www.postgresql.org/) | 11.5 | Opensource database management system. You will have to create two data bases within PostgreSQL: "affiliation_graphs" and "common". |
 | [CUDA](https://developer.nvidia.com/cuda-zone) | 11.2 | CUDA is required to run cupy python libraries. (*Optional* but extremely recommended) |
 
     
