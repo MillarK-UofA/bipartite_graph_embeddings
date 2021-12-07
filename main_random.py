@@ -4,7 +4,7 @@
 # author: Kyle Millar (kyle.millar@adelaide.edu.au)
 
 """
-Random biparite graph used to test the scalability of BGE.
+Random bipartite graph used to test the scalability of BGE.
 """
 
 # ---
@@ -18,20 +18,30 @@ from time import time
 
 def random_size(n, avg_actor_degree, avg_comm_degree):
     """
+    Generates a random bipartite graph based on the number of specified actors and an average degree for both the actor
+    and community set.
+
     **Parameters**
     > **n**: ``int`` -- The number of nodes in the actor set.
 
-    > **m**: ``int`` -- The number of nodes in the community set.
+    > **avg_actor_degree**: ``float`` -- The average number of communities per actor.
 
-    > **p**: ``float`` -- the probability of edges creation.
-    :return:
+    > **avg_comm_degree**: ``float`` -- The average number of actors per community
+
+    **Returns**
+    > **graph**: ``common.BipartiteGraph -- A randomly generated bipartite graph.
     """
 
+    # Calculate the number of communities to generate.
     m = int(n * (avg_actor_degree/avg_comm_degree))
+
+    # Calculate the probability of an edge.
     p = avg_actor_degree/m
 
+    # Generate a random bipartite graph using networkx.
     nx_graph = random_graph(n, m, p)
 
+    # Convert the networkx.Graph into the common.Graph object used in BGE.
     graph = BipartiteGraph()
     graph.load_from_edgelist(list(nx_graph.edges))
     graph.print_network_statistics("Random Graph")
@@ -41,35 +51,11 @@ def random_size(n, avg_actor_degree, avg_comm_degree):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input",
-                        help="The input graph path.")
-    parser.add_argument("-o", "--output",
-                        help="The output embeddings path.")
-    parser.add_argument("-d", "--embedding_dim", default=128, type=int,
-                        help="Number of embedding dimensions (Default 128).")
-    parser.add_argument("-bs", "--batch_size", default=2048, type=int,
-                        help="Number of forward/backwards passes to computer concurrently (default 4096).")
-    parser.add_argument("-a", "--alpha", default=0.025, type=float,
-                        help="The initial learning rate (default 0.025)")
-    parser.add_argument("-ns", "--negative_samples", default=5, type=int,
-                        help="The number of negative samples for each forward/backward passes (default 5).")
-    parser.add_argument("-lf", "--loss_function", default="dot",
-                        help="The loss function to use (default 'dot').")
-    parser.add_argument("-opt", "--optimiser", default="sgd",
-                        help="The optimiser to use (default 'sgd').")
-    parser.add_argument("-ss", "--sample_size", default=50, type=int,
-                        help="The number of epochs before the stop condition is checked (default 20).")
-    parser.add_argument("-wi", "--init", default='normal', type=str,
-                        help="Which method to use for initialising weights (default 'normal').")
     parser.add_argument("-s", "--sampling_strategy", default="tes", type=str,
                         help="Which edge sampling strategy to use (default 'tes').")
     parser.add_argument("-n", "--num_actors", default='1e1', type=str,
                         help="The number of epochs before the stop condition is checked (default 20).")
-
     args = parser.parse_args()
-
-    if args.output is None:
-        args.output = args.input
 
     # - Generate Bipartite Graph from input -------------------------------------------------------------------------- #
 
@@ -92,16 +78,12 @@ if __name__ == "__main__":
     # - Initialise BGE using specified parameters. ------------------------------------------------------------------- #
     t1 = time()
 
-    encoder = BGE(graph, lf=args.loss_function, opt=args.optimiser, embedding_dim=args.embedding_dim,
-                  alpha=args.alpha, init=args.init)
+    encoder = BGE(graph, lf='dot', opt='sgd', embedding_dim=128, alpha=0.025, init='normal')
     # ---------------------------------------------------------------------------------------------------------------- #
 
     # - Training BGE ------------------------------------------------------------------------------------------------- #
     print("Training...")
-    encoder.train_model(
-        batch_size=args.batch_size, ns=args.negative_samples, max_epochs=epochs, sampling=args.sampling_strategy,
-        epoch_sample_size=args.sample_size
-    )
+    encoder.train_model(batch_size=2048, ns=5, max_epochs=epochs, sampling=args.sampling_strategy, epoch_sample_size=50)
     # ---------------------------------------------------------------------------------------------------------------- #
 
     print("dl {} - Actor nodes: {} - {:,} seconds".format(args.sampling_strategy, args.num_actors, int(time() - t1)))

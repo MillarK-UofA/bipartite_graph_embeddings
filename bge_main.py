@@ -1,6 +1,6 @@
 # encoding: utf-8
 # module main.py
-# from biparite_graph_embeddings
+# from bipartite_graph_embeddings
 # author: Kyle Millar (kyle.millar@adelaide.edu.au)
 
 """
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--sampling_strategy", default="tes", type=str,
                         help="Which edge sampling strategy to use (default 'tes').")
     parser.add_argument("-e", "--epochs", default=-1, type=int,
-                        help="The number of iterations to run. (Default (-1) stops training when loss starts to increase.)")
+                        help="The number of iterations to run. (Default (-1) stops training when loss increases.)")
 
     args = parser.parse_args()
 
@@ -59,9 +59,8 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------------------------------------------- #
 
     # - Training BGE ------------------------------------------------------------------------------------------------- #
-    print("Training...")
     encoder.train_model(
-        batch_size=args.batch_size, ns=args.negative_samples, max_epochs=1547, sampling=args.sampling_strategy,
+        batch_size=args.batch_size, ns=args.negative_samples, max_epochs=args.epochs, sampling=args.sampling_strategy,
         epoch_sample_size=args.sample_size
     )
     # ---------------------------------------------------------------------------------------------------------------- #
