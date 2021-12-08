@@ -34,19 +34,19 @@ Documentation has been created using the [mkdocs](https://pypi.org/project/mkdoc
 | ./lib/common                     | Common functions used throughout the codebase.                                                      |
 
 
-##Software Requirements:
+<h2> Software Requirements </h2> 
+
 | Software Support | Validated Version | Short Description |
 | -------- | ----------------- | ----------------- |
 | [Python](https://www.python.org/downloads/release/python-360/) | 3.8.1 | Python is the default programming language used throughout the codebase. |
 | [CUDA](https://developer.nvidia.com/cuda-zone) | 11.2 | CUDA is required to run cupy python libraries. (*Optional* but extremely recommended) |
 
-    
-!!! warning "CUDA versions"
-    The version of CUDA you have installed will dictate what version of cupy you should install. 
-    If unsure, please use the versions specified on this page for [cupy](https://docs.cupy.dev/en/stable/install.html).
+
+The version of CUDA you have installed will dictate what version of cupy you should install. 
+If unsure, please use the versions specified on this page for [cupy](https://docs.cupy.dev/en/stable/install.html).
 
 
-##Python Modules
+<h2> Python Modules </h2> 
 
 | Python Module                                             | Validated Version | Short Description                                                      |
 |-----------------------------------------------------------| ------- |----------------------------------------------------------------------------------|
@@ -62,5 +62,4 @@ Documentation has been created using the [mkdocs](https://pypi.org/project/mkdoc
 | [cupy](https://pypi.org/project/cupy/)                    | v9.6.0  (cupy-cuda112) | Performs numpy-like operations on the GPU. Requires a CUDA enabled GPU (nVIDIA). |
 
 
-!!! note "cupy"
-    If cupy is not installed, numpy will be used instead. See [cupy_support](http://localhost:8000/common/cupy_support.md)
+If cupy is not installed, numpy will be used instead.
