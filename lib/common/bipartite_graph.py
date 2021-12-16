@@ -10,6 +10,7 @@ This class uses cupy if it is available on the system.
 """
 
 # ---
+from tqdm import tqdm
 from lib.common.cupy_support import xp, csr_matrix, xp_round
 from networkx import Graph
 from prettytable import PrettyTable

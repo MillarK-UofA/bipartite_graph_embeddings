@@ -37,7 +37,7 @@ class TES(SamplingStrategy):
         self.batch_size = self.batch_size*(ns+1)
 
         # The temporary storage of the dataset (if using large_dataset=True)
-        self.save_path = os.path.join(self.temp_dataset_path, str(graph) + "_tes.dat")
+        self.save_path = os.path.join(self.temp_dataset_path, str(graph) + "_tes.h5")
 
         # Generate the dataset (positive and negative samples).
         self.generate_corpus(graph)

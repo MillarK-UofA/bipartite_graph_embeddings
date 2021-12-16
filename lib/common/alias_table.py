@@ -12,6 +12,7 @@ https://lips.cs.princeton.edu/the-alias-method-efficient-sampling-with-many-disc
 
 # ---
 import numpy as np
+from tqdm import tqdm
 # ---
 
 

@@ -4,7 +4,11 @@
 # author: Kyle Millar (kyle.millar@adelaide.edu.au)
 
 # ---
+import random
+
+import h5py as h5py
 from lib.common.cupy_support import xp
+from lib.common.chunker import chunk_list
 import numpy as np
 import os
 # ---
@@ -19,6 +23,9 @@ class SamplingStrategy:
 
     # Path to save the created dataset if using large_dataset=True
     temp_dataset_path = "./temp"
+
+    # Chunk size, the number of samples to write to disk at once (only used when large_dataset=True).
+    chunk_size = int(10e6)
 
     def __init__(self, batch_size, ns, large_dataset=True):
         """
@@ -74,18 +81,21 @@ class SamplingStrategy:
         if not self.large_dataset:
             self.dataset = np.zeros(shape=shape, dtype=np.uintc)
         else:
-            self.dataset = np.memmap(self.save_path, dtype=np.uintc, mode='w+', shape=shape)
+            #self.dataset = np.memmap(self.save_path, dtype=np.uintc, mode='w+', shape=shape)
+            self.dataset = h5py.File(self.save_path, 'w')
+            self.dataset.create_dataset('dataset', shape=shape, dtype=np.uintc)
+            self.dataset = self.dataset['dataset']
+
         # ------------------------------------------------------------------------------------------------------------ #
 
     def shuffle(self):
         """
-        shuffles the dataset.
+        shuffles the dataset in chunks.
         """
-        # Note: Cupy is much faster at shuffling the edge list than numpy.
-        perm = self.operator.random.permutation(len(self.dataset))
-
-        # Shuffle edges.
-        self.dataset = self.dataset[perm]
+        for chunk in chunk_list(range(self.sampling_budget), self.chunk_size):
+            start = chunk[0]
+            end = chunk[-1]+1
+            self.dataset[start:end, :] = np.random.permutation(self.dataset[start:end, :])
 
     def get_batch(self, idx):
         """Gets the next batch of positive and negative samples. get_batch is overridden by all child classes."""

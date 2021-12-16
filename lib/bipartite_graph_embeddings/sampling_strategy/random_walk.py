@@ -22,8 +22,10 @@ found: https://github.com/aditya-grover/node2vec.
 from tqdm import tqdm
 from lib.bipartite_graph_embeddings.sampling_strategy.sampling_strategy import SamplingStrategy
 from lib.common.alias_table import alias_setup, alias_draw
+from lib.common.chunker import chunk_list
 from lib.common.cupy_support import xp
 import random
+import numpy as np
 from time import time
 import os
 # ---
@@ -46,7 +48,7 @@ class RandomWalk(SamplingStrategy):
         self.sampling_budget = 10 * 80 * len(graph)
 
         # The temporary storage of the dataset (if using large_dataset=True)
-        self.save_path = os.path.join(self.temp_dataset_path, str(graph) + "_rw.dat")
+        self.save_path = os.path.join(self.temp_dataset_path, str(graph) + "_rw.h5")
 
         # Generate the dataset (positive and negative samples).
         self.generate_corpus(graph)
@@ -55,7 +57,6 @@ class RandomWalk(SamplingStrategy):
         """
         Get the alias edge setup lists for a given edge.
         """
-
         unnormalized_probs = []
         for dst_nbr in sorted(graph.neighbors(dst)):
 
@@ -82,10 +83,10 @@ class RandomWalk(SamplingStrategy):
             norm_const = sum(unnormalized_probs)
             normalized_probs = [float(u_prob)/norm_const for u_prob in unnormalized_probs]
             alias_nodes[node] = alias_setup(normalized_probs)
-        alias_edges = {}
 
-        # Undirected graph. Add an alias edge for both directions.
+        alias_edges = {}
         for edge in graph.edges():
+            # Undirected graph. Add an alias edge for both directions.
             alias_edges[edge] = self.get_alias_edge(graph, edge[0], edge[1])
             alias_edges[(edge[1], edge[0])] = self.get_alias_edge(graph, edge[1], edge[0])
 
@@ -145,37 +146,48 @@ class RandomWalk(SamplingStrategy):
 
         # - Populate dataset through a random walk ------------------------------------------------------------------- #
 
+        print("Sampling Dataset.")
+
         # Initialise progress bar.
         bar = tqdm(total=self.sampling_budget)
+        idx = 0
 
         nodes = list(graph.nodes())
-        idx = 0
         for walk_iter in range(self.r):
 
             # Shuffle nodes.
             random.shuffle(nodes)
 
-            for node in nodes:
+            for chunk in chunk_list(nodes, max(int(self.chunk_size/self.l), 1)):
 
-                # Compute walk
-                walk = self.node2vec_walk(graph, node, alias_nodes, alias_edges)
+                # Create a temporary array to save
+                temp = np.zeros(shape=(len(chunk)*self.l, self.ns + 2), dtype=np.uintc)
+                chunk_idx = 0
 
-                # If the walk starts with an actor or community.
-                offset = 0 if node in graph.actor_idx else 1
+                for node in chunk:
 
-                # For each step in the walk.
-                for step_idx in range(self.l-1):
+                    # Compute walk
+                    walk = self.node2vec_walk(graph, node, alias_nodes, alias_edges)
 
-                    # draw positive edge (actor, community).
-                    self.dataset[idx, 0] = graph.actor_idx[walk[step_idx + (step_idx + offset) % 2]]
-                    self.dataset[idx, 1] = graph.comm_idx[walk[step_idx + (1 - (step_idx + offset) % 2)]]
+                    # If the walk starts with an actor or community.
+                    offset = 0 if node in graph.actor_idx else 1
 
-                    # draw negative community examples.
-                    for i in range(self.ns):
-                        self.dataset[idx, 2 + i] = alias_draw(J_neg, q_neg)
+                    # For each step in the walk.
+                    for step_idx in range(self.l):
 
-                    idx += 1
-                    bar.update()
+                        # draw positive edge (actor, community).
+                        temp[chunk_idx, 0] = graph.actor_idx[walk[step_idx + (step_idx + offset) % 2]]
+                        temp[chunk_idx, 1] = graph.comm_idx[walk[step_idx + (1 - (step_idx + offset) % 2)]]
+
+                        # draw negative community examples.
+                        for i in range(self.ns):
+                            temp[chunk_idx, 2 + i] = alias_draw(J_neg, q_neg)
+
+                        chunk_idx += 1
+                        bar.update(1)
+
+                self.dataset[idx:idx+chunk_idx] = temp
+                idx = idx+chunk_idx
         # ------------------------------------------------------------------------------------------------------------ #
 
         # Store dataset on GPU.

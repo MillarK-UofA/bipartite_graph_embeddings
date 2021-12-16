@@ -7,6 +7,7 @@
 from tqdm import tqdm
 from lib.bipartite_graph_embeddings.sampling_strategy.sampling_strategy import SamplingStrategy
 from lib.common.alias_table import alias_setup, alias_draw
+from lib.common.chunker import chunk_list
 from lib.common.cupy_support import xp
 import numpy as np
 from time import time
@@ -24,7 +25,7 @@ class EdgeSampler(SamplingStrategy):
         self.sampling_budget = 10 * 80 * len(graph)
 
         # The temporary storage of the dataset (if using large_dataset=True)
-        self.save_path = os.path.join(self.temp_dataset_path, str(graph)+"_es.dat")
+        self.save_path = os.path.join(self.temp_dataset_path, str(graph)+"_es.h5")
 
         # Generate the dataset (positive and negative samples).
         self.generate_corpus(graph)
@@ -64,14 +65,24 @@ class EdgeSampler(SamplingStrategy):
         # ------------------------------------------------------------------------------------------------------------ #
 
         # - Populate dataset ----------------------------------------------------------------------------------------- #
-        for idx in tqdm(range(self.sampling_budget)):
+        bar = tqdm(total=self.sampling_budget)
 
-            # draw positive edge (actor, community).
-            self.dataset[idx, :2] = edge_idx[alias_draw(J_pos, q_pos)]
+        for chunk in chunk_list(range(self.sampling_budget), self.chunk_size):
 
-            # draw negative community examples.
-            for i in range(self.ns):
-                self.dataset[idx, 2+i] = alias_draw(J_neg, q_neg)
+            temp = np.zeros(shape=(len(chunk), self.ns+2), dtype=np.uintc)
+
+            for idx, _ in enumerate(chunk):
+
+                # draw positive edge (actor, community).
+                temp[idx, :2] = edge_idx[alias_draw(J_pos, q_pos)]
+
+                # draw negative community examples.
+                for i in range(self.ns):
+                    temp[idx, 2 + i] = alias_draw(J_neg, q_neg)
+
+                bar.update(1)
+
+            self.dataset[chunk[0]:chunk[-1]+1, :] = temp
         # ------------------------------------------------------------------------------------------------------------ #
 
         # Store dataset on GPU.
