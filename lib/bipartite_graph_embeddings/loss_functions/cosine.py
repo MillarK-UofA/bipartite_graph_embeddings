@@ -19,7 +19,7 @@ from lib.common.cupy_support import xp
 
 class Cosine(LossFunction):
 
-    def __init__(self, activation='exp'):
+    def __init__(self, activation='tanh'):
         """Initialises the Cosine Loss Function class."""
         super().__init__(activation)
 
@@ -76,8 +76,10 @@ class Cosine(LossFunction):
         # Multiply each normalised actor by its cosine similarity to the community set.
         d_wa_5 = xp.multiply(d_wa_4, d_wa_3)
 
+        eps = xp.random.rand(*d_wa_2.shape) / 1000
+
         # Subtract d_wa_3 from d_wa_1
-        dL_dwa = d_wa_2 - d_wa_5
+        dL_dwa = d_wa_2 - d_wa_5 + eps
         # ------------------------------------------------------------------------------------------------------------ #
 
         # - Comms Update --------------------------------------------------------------------------------------------- #
@@ -95,7 +97,8 @@ class Cosine(LossFunction):
         d_wc_5 = xp.multiply(d_wc_4, d_wc_3)
 
         # Subtract d_wa_3 from d_wa_1
-        dL_dwc = d_wc_2 - d_wc_5
+        dL_dwc = d_wc_2 - d_wc_5 + eps
+
         # ------------------------------------------------------------------------------------------------------------ #
 
         return dL_dwa, dL_dwc, y_true, y_pred

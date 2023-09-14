@@ -4,6 +4,8 @@
 # author: Kyle Millar (kyle.millar@adelaide.edu.au)
 
 # ---
+import numpy as np
+
 from lib.common.cupy_support import xp, sigmoid
 # ---
 
@@ -88,9 +90,9 @@ class LossFunction:
         y_pred = sigmoid(z)
 
         # Get the true matrix.
-        y_true = self.compute_y_true(y_pred)
+        y_true = self.compute_y_true(y_pred, lims=(0, 1))
 
-        # calculate the difference between y_true and y_pred matrices.
+        # calculate the squared difference between y_true and y_pred matrices.
         loss = xp.subtract(y_true, y_pred)
 
         # Change in y_pred with respect to z.
@@ -109,7 +111,7 @@ class LossFunction:
         y_pred = xp.exp(z) * diag + xp.exp(-z) * off_diag
 
         # Get the true matrix.
-        y_true = self.compute_y_true(y_pred, lims=(xp.exp(1), xp.exp(1)))
+        y_true = self.compute_y_true(y_pred, lims=(-np.pi, 0))
 
         # calculate the difference between y_true and y_pred matrices.
         loss = xp.subtract(y_true, y_pred)
@@ -143,7 +145,7 @@ class LossFunction:
         y_pred = xp.tanh(z)
 
         # Get the true matrix.
-        y_true = self.compute_y_true(y_pred, lims=(-1, 1))
+        y_true = self.compute_y_true(y_pred, lims=(xp.tanh(-0.5), xp.tanh(1)))
 
         # calculate the difference between y_true and y_pred matrices.
         loss = xp.subtract(y_true, y_pred)

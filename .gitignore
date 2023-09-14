@@ -1,2 +1,5 @@
-./temp
-./bipartite_graph_embeddings/.idea
+temp/
+vpn_analyser/
+results/
+test/
+.idea/

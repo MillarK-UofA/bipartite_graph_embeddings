@@ -17,14 +17,14 @@ import os
 
 class EdgeSampler(SamplingStrategy):
 
-    def __init__(self, graph, batch_size, ns):
-        """Defines the conventional edge sampling strategy."""
-        super().__init__(batch_size, ns)
+    def __init__(self, graph, batch_size, ns, large_graph):
+        """Creates a dataloader object from a given bipartite graph"""
+        super().__init__(batch_size, ns, large_graph)
 
         # The number of edges to evaluate in an epoch.
         self.sampling_budget = 10 * 80 * len(graph)
 
-        # The temporary storage of the dataset (if using large_dataset=True)
+        # The temporary storage of the dataset (if using large_graph=True)
         self.save_path = os.path.join(self.temp_dataset_path, str(graph)+"_es.h5")
 
         # Generate the dataset (positive and negative samples).
@@ -86,7 +86,7 @@ class EdgeSampler(SamplingStrategy):
         # ------------------------------------------------------------------------------------------------------------ #
 
         # Store dataset on GPU.
-        if not self.large_dataset:
+        if not self.large_graph:
             self.dataset = xp.array(self.dataset)
 
         print("sampling time: {:,} seconds".format(int(time() - start_time)))

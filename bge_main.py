@@ -14,6 +14,7 @@ import argparse
 # ---
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input",
                         help="The path to the input graph.")
@@ -39,6 +40,8 @@ if __name__ == "__main__":
                         help="Which edge sampling strategy to use (default 'tes').")
     parser.add_argument("-e", "--epochs", default=-1, type=int,
                         help="The number of iterations to run. (Default (-1) stops training when loss increases.)")
+    parser.add_argument("-l", "--large_graph", action='store_true',
+                        help="Setting the large_graph flag will evaluate the graph from storage (Slower).")
 
     args = parser.parse_args()
 
@@ -49,7 +52,7 @@ if __name__ == "__main__":
 
     # - Generate Bipartite Graph from input -------------------------------------------------------------------------- #
     graph = BipartiteGraph(weighted=False)
-    graph.load_from_edgelist_file(args.input, dlim='\t')
+    graph.load_from_edgelist_file(args.input, dlim=',')
     graph.print_network_statistics(args.input)
     # ---------------------------------------------------------------------------------------------------------------- #
 
@@ -61,7 +64,7 @@ if __name__ == "__main__":
     # - Training BGE ------------------------------------------------------------------------------------------------- #
     encoder.train_model(
         batch_size=args.batch_size, ns=args.negative_samples, max_epochs=args.epochs, sampling=args.sampling_strategy,
-        epoch_sample_size=args.sample_size
+        epoch_sample_size=args.sample_size, large_graph=args.large_graph
     )
     # ---------------------------------------------------------------------------------------------------------------- #
 

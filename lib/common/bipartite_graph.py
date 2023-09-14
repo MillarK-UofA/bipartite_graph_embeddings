@@ -14,6 +14,7 @@ from tqdm import tqdm
 from lib.common.cupy_support import xp, csr_matrix, xp_round
 from networkx import Graph
 from prettytable import PrettyTable
+import networkx as nx
 from networkx.algorithms import bipartite
 import pandas as pd
 import numpy as np
@@ -76,15 +77,44 @@ class BipartiteGraph(Graph):
         self.actor_degrees = None
         self.comm_degrees = None
 
-        # The density of the graph. (i.e., ratio of existing edges over total possible edges).
-        self.density = 0
-
         # The colour of the vertex embeddings (when displayed on the BGEplot). If None, vertices will be displayed with
         # grey embeddings.
         self.colours = {'a': None, 'c': None}
 
+    def __len__(self):
+        return len(self.nodes)
+
     def __str__(self):
         return "bg_a{}_c{}".format(len(self.actors), len(self.comms))
+
+    def remove_node(self, n):
+        # removes the node from the graph.
+        super().remove_node(n)
+
+        # Cleans up additional variables.
+        if n in self.actor_idx:
+            self.actors.remove(n)
+        else:
+            self.comms.remove(n)
+
+        self.actor_idx = {actor: idx for idx, actor in enumerate(self.actors)}
+        self.comm_idx = {comm: idx for idx, comm in enumerate(self.comms)}
+
+    def remove_nodes(self, removed_nodes):
+
+        for n in removed_nodes:
+
+            # removes the node from the graph.
+            super().remove_node(n)
+
+            # Cleans up additional variables.
+            if n in self.actor_idx:
+                self.actors.remove(n)
+            else:
+                self.comms.remove(n)
+
+        self.actor_idx = {actor: idx for idx, actor in enumerate(self.actors)}
+        self.comm_idx = {comm: idx for idx, comm in enumerate(self.comms)}
 
     def load_from_edgelist_file(self, fname, dlim='\t', header=False, parse_func=None):
         """
@@ -147,7 +177,7 @@ class BipartiteGraph(Graph):
             parse_func = format_row
 
         # Formats each row an stores to a 2D list.
-        edgelist = list(map(parse_func, rows))
+        edgelist = list(filter(None, map(parse_func, rows)))
 
         # ------------------------------------------------------------------------------------------------------------ #
 
@@ -212,6 +242,13 @@ class BipartiteGraph(Graph):
         self.actors = list(df_edges['actors'].unique())
         self.comms = list(df_edges['communities'].unique())
 
+        # Check if the actor and community nodes intersect.
+        a_c_intersection = len(set(self.actors).intersection(set(self.comms)))
+        if a_c_intersection > 0:
+            print("An intersection between the Actor and Community set was found. {:,} conflicts.".format(a_c_intersection))
+            print("Please make sure that Columns 0 and 1 of the Edge List contain only Actor and Community nodes, respectively")
+            exit()
+
         # Generate a dictionary mapping the vertex labels to their index.
         self.actor_idx = {actor: idx for idx, actor in enumerate(self.actors)}
         self.comm_idx = {comm: idx for idx, comm in enumerate(self.comms)}
@@ -226,9 +263,6 @@ class BipartiteGraph(Graph):
             self.add_weighted_edges_from(df_edges.values)
         else:
             self.add_edges_from(df_edges.values)
-
-        # Compute graph density
-        self.density = bipartite.density(self, self.comms) * 100
 
     def get_degree_dist(self, vertex_type='actors', pow=1):
         """
@@ -252,10 +286,10 @@ class BipartiteGraph(Graph):
             negative sampling
         """
         def degree_dist(vertex_idx, vertices, pow):
-            degree_dist = xp_round(xp.power(xp.array([degree for _, degree in self.degree(vertices)]), pow), 4)
-            degree_dist /= sum(degree_dist)
+            degree_dist = np.round(np.power(np.array([degree for _, degree in self.degree(vertices)]), pow), 4)
+            degree_dist = np.divide(degree_dist, np.sum(degree_dist))
 
-            vertices = xp.array([vertex_idx[actor] for actor in vertices])
+            vertices = np.array([vertex_idx[actor] for actor in vertices])
 
             return vertices, degree_dist
 
@@ -268,9 +302,9 @@ class BipartiteGraph(Graph):
         elif vertex_type == 'all':
             actor_vertices, actor_dist = degree_dist(self.actor_idx, self.actors, pow)
             comm_vertices, comm_dist = degree_dist(self.comm_idx, self.comms, pow)
-            return xp.concatenate([actor_dist, comm_vertices]), xp.concatenate([actor_dist, comm_dist])
+            return np.concatenate([actor_dist, comm_vertices]), np.concatenate([actor_dist, comm_dist])
         else:
-            "Invalid vertex_type ('{}'). Please select either: 'actors', 'comms', or 'all'."
+            print("Invalid vertex_type ('{}'). Please select either: 'actors', 'comms', or 'all'.")
             exit()
 
     def get_weight_dist(self, actors=True, pow=1):
@@ -301,14 +335,14 @@ class BipartiteGraph(Graph):
 
             # Calculate the sum of the weights (raised to a specified power) for each vertex in the selected vertex set.
             weight_dist = [
-                sum([xp.power(attr['weight'], pow) for node, attr in self.adj[vertex].items()]) for vertex in vertices
+                sum([np.power(attr['weight'], pow) for node, attr in self.adj[vertex].items()]) for vertex in vertices
             ]
 
-            weight_dist = xp.array(weight_dist)
+            weight_dist = np.array(weight_dist)
             weight_dist = weight_dist / max(weight_dist)
 
         else:
-            weight_dist = xp.ones(len(vertices))
+            weight_dist = np.ones(len(vertices))
 
         return weight_dist
 
@@ -333,7 +367,7 @@ class BipartiteGraph(Graph):
             "{:,}".format(len(self.edges)),
             "{:.2f}".format(actor_degree_avg),
             "{:.2f}".format(comm_degree_avg),
-            "{:.2e}".format(self.density)
+            "{:.2e}".format(bipartite.density(self, self.comms) * 100)
         ])
 
         print("\n", table, "\n")
@@ -418,5 +452,5 @@ class BipartiteGraph(Graph):
         # Selected either the actor or community vertices.
         key, vertices = ('a', self.actors) if actor else ('c', self.comms)
 
-        self.colours[key] = [colour_dict[vertex] for vertex in vertices]
+        self.colours[key] = {vertex: colour_dict[vertex] for vertex in vertices}
 

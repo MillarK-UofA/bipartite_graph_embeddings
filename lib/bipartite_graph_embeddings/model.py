@@ -9,6 +9,8 @@ Defines and trains the bipartite graph embedding (BGE) model.
 
 # ---
 import json
+import time
+
 import pandas as pd
 import statistics as stats
 from lib.common.cupy_support import xp, scatter_add, mean_squared_error, _cupy_available, xp_round
@@ -17,6 +19,7 @@ from lib.bipartite_graph_embeddings.initialisers.initialiser import Initialiser
 from lib.bipartite_graph_embeddings.optimisers import *
 from lib.bipartite_graph_embeddings.loss_functions import *
 from lib.bipartite_graph_embeddings.sampling_strategy import *
+from lib.visualisation.bge_plot import BGEPlot
 from lib.common.chunker import chunk_list
 # ---
 
@@ -28,7 +31,6 @@ class BGE:
     loss_functions = {
         'dot': dot.Dot(),
         'cosine': cosine.Cosine(),
-        'angular': angular.Angular()
     }
 
     optimisers = {
@@ -89,7 +91,9 @@ class BGE:
         self.update_actors = update_actors
         self.update_comms = update_comms
 
-    def train_model(self, batch_size, ns, sampling, epoch_sample_size, max_epochs):
+        self.plot = BGEPlot(self.graph, self.embedding_dim, labels=False)
+
+    def train_model(self, batch_size, ns, sampling, epoch_sample_size, max_epochs, large_graph):
         """
         Trains the graph embeddings.
 
@@ -109,7 +113,7 @@ class BGE:
         """
 
         # Define the edge sampling strategy to use.
-        dataloader = self.sampling_strategies[sampling](self.graph, batch_size, ns)
+        dataloader = self.sampling_strategies[sampling](self.graph, batch_size, ns, large_graph)
 
         # Set the stop condition for the current training.
         stop_condition = StopCondition(epoch_sample_size=epoch_sample_size, max_epochs=max_epochs)
@@ -127,7 +131,7 @@ class BGE:
             cur_epoch_loss = []
 
             # Chunks the shuffled dataset indices into batches for training the graph embeddings.
-            for idx in range(0, len(dataloader), batch_size):
+            for idx in range(0, len(dataloader), dataloader.batch_size):
 
                 # Returns the actor and community indices within the batch.
                 actors_idx, comms_idx = dataloader.get_batch(idx)
@@ -152,6 +156,8 @@ class BGE:
 
                 # Calculate the loss over the batch.
                 cur_epoch_loss.append(mean_squared_error(y_true, y_pred))
+
+            self.plot.update(self.W)
 
             # Update stop condition with the average loss over the current epoch. Average taken over each batch in the
             # epoch.
@@ -208,7 +214,7 @@ class BGE:
             json.dump(weight_json, save_file)
         # ------------------------------------------------------------------------------------------------------------ #
 
-    def load_embeddings_from_file(self, file_path, verbose=False):
+    def load_embeddings_from_file(self, file_path, zero_unknown=False, verbose=False):
         """
         Loads pre-computed embeddings from a specified file path. Can be used to continue training. Vertices in the
         graph that are not in the embedding file are initialised randomly.
@@ -258,8 +264,11 @@ class BGE:
                     restore_count += 1
                     continue
 
-                # If embedding is unknown, the embedding is randomly initialised.
-                self.W[vertex_type][idx] = xp.random.normal(loc=0, scale=0.01, size=(1, self.embedding_dim))
+                if zero_unknown:
+                    self.W[vertex_type][idx] = xp.zeros(shape=(self.embedding_dim,))
+                else:
+                    # If embedding is unknown, the embedding is randomly initialised.
+                    self.W[vertex_type][idx] = xp.random.normal(loc=0, scale=0.01, size=(self.embedding_dim,))
 
             if verbose:
                 vertex_label = "actor" if vertex_type == 'a' else "community"

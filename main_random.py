@@ -5,6 +5,8 @@
 
 """
 Random bipartite graph used to test the scalability of BGE.
+
+Shuffling was only performed once to evaluated the scalability of BGE.
 """
 
 # ---
@@ -55,6 +57,8 @@ if __name__ == "__main__":
                         help="Which edge sampling strategy to use (default 'tes').")
     parser.add_argument("-n", "--num_actors", default='1e1', type=str,
                         help="The number of epochs before the stop condition is checked (default 20).")
+    parser.add_argument("-l", "--large_graph", action='store_true',
+                        help="Setting the large_graph flag will evaluate the graph from storage (Slower).")
     args = parser.parse_args()
 
     # - Generate Bipartite Graph from input -------------------------------------------------------------------------- #
@@ -82,7 +86,8 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------------------------------------------- #
 
     # - Training BGE ------------------------------------------------------------------------------------------------- #
-    encoder.train_model(batch_size=2048, ns=5, max_epochs=epochs, sampling=args.sampling_strategy, epoch_sample_size=50)
+    encoder.train_model(batch_size=2048, ns=5, max_epochs=epochs,
+                        sampling=args.sampling_strategy, epoch_sample_size=epochs, large_graph=args.large_graph)
     # ---------------------------------------------------------------------------------------------------------------- #
 
     print("dl {} - Actor nodes: {} - {:,} seconds".format(args.sampling_strategy, args.num_actors, int(time() - t1)))

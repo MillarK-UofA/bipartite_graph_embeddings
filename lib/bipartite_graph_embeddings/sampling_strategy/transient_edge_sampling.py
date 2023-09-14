@@ -14,7 +14,7 @@ import os
 
 class TES(SamplingStrategy):
 
-    def __init__(self, graph, batch_size, ns):
+    def __init__(self, graph, batch_size, ns, large_graph):
         """
         Creates a dataloader object from a given bipartite graph
 
@@ -24,11 +24,11 @@ class TES(SamplingStrategy):
         > **ns:** ``int`` -- The number of negative samples to generate per positive sample.
 
         > **large:** ``bool`` -- Whether to store the generated dataset within GPU memory if available
-        (large_dataset=False).
+        (large_graph=False).
         """
 
         # Call parent init.
-        super().__init__(batch_size, ns)
+        super().__init__(batch_size, ns, large_graph)
 
         # For a static graph, the sampling budget is the number of edges in the graph.
         self.sampling_budget = len(graph.edges())
@@ -36,7 +36,7 @@ class TES(SamplingStrategy):
         # Update batch size. TES evaluates ns+1 edges per update.
         self.batch_size = self.batch_size*(ns+1)
 
-        # The temporary storage of the dataset (if using large_dataset=True)
+        # The temporary storage of the dataset (if using large_graph=True)
         self.save_path = os.path.join(self.temp_dataset_path, str(graph) + "_tes.h5")
 
         # Generate the dataset (positive and negative samples).
@@ -66,7 +66,7 @@ class TES(SamplingStrategy):
         # ------------------------------------------------------------------------------------------------------------ #
 
         # Store dataset on GPU.
-        if not self.large_dataset:
+        if not self.large_graph:
             self.dataset = xp.array(self.dataset)
 
         print("sampling time: {:,} seconds".format(int(time() - start_time)))

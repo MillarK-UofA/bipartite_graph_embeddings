@@ -37,10 +37,10 @@ class SGD(Optimiser):
         super().__init__(alpha, num_actors, num_comms, embedding_dim)
 
     def update_timestep(self):
-        """Updates the time step 't' and returns the corresponding alpha for this given time step"""
         """Updates the time step 't' and the corresponding alpha for this given time step"""
         self.t += 1
         self.alpha_t = self.alpha / log(self.t)
+
 
     def calculate_batch_gradient(self, grad, indices, key):
         """

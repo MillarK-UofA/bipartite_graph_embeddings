@@ -42,7 +42,7 @@ except ImportError:
 # ---
 
 # - Sparse Matrices -------------------------------------------------------------------------------------------------- #
-# Note: Currently only using scipy sparse matrices. Cupy's sparse matrices require further development before they are a
+# Note: Currently only using scipy sparse matrices. Cupy's np matrices require further development before they are a
 # usable replacement for scipy's sparse matrices. Currently, Cupy's sparse matrices are much slower to manipulate.
 if _cupy_available:
     #csr_matrix = cupyx.scipy.sparse.csr_matrix
